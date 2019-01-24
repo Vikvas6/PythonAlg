@@ -1,3 +1,15 @@
+# 1. Подсчитать, сколько было выделено памяти под переменные в ранее
+# разработанных программах в рамках первых трех уроков.
+# Проанализировать результат и определить программы с наиболее
+# эффективным использованием памяти.
+# Примечание: Для анализа возьмите любые 1-3 ваших программы или несколько
+# вариантов кода для одной и той же задачи. Результаты анализа вставьте в виде
+# комментариев к коду. Также укажите в комментариях версию Python и
+# разрядность вашей ОС.
+
+# Я взял ту же задачу, что и для ДЗ урока 4, информационные комментарии оттуда
+# оставил, но комментарии по поводу использования памати я удалил.
+# Разрядность моей системы - 64 бита.
 # Задание номер 1 из урока номер 3 (с дополнением)
 # Оригинальная задача:
 #   В диапазоне натуральных чисел от 2 до 99 определить, сколько из них кратны
@@ -9,8 +21,26 @@
 #   Уберём из функции print и вместо этого будем возвращать список с
 #   результатами, в списке по порядку содержатся количества чисел
 #   кратных от 2х до 9ти.
+# Новое дополнение для выполнения ДЗ урока 6:
+# 1) n будет всё время равно 100
+# 2) все функции переписаны для использования переменных из одного глобального
+# списка - чтобы можно было один раз посчитать затраченную память
+#
+# Я использую глобально определённый список, в который и буду загонять свои
+# переменные, в функции test_func я так же добавил подсчёт количества памати,
+# занятого переменными в этом массиве.
+# Важное замечание - я не учитываю переменную, которую передают
+# на вход функции (статически +28 байт).
 
-import cProfile
+import sys
+
+# Я заранее заполнил этот массив каким-то количество пустых значений
+# (память на None объекты я не учитываю), не хотелось сохранять
+# так же указатель на конец массива в начале каждого алгоритма
+# (в одном всё же пришлось сохранить).
+variables_list = []
+for i in range(5):
+    variables_list.append(None)
 
 
 def print_result(n, result):
@@ -26,82 +56,67 @@ def test_func(func):
     for i, item in enumerate(true_result):
         assert assert_result[i] == item
         print(f'Test for {i+2} OK')
+    print(f'Total size: {show_size(variables_list)}')
+
+
+def show_size(x, level=0):
+    size = 0
+    if level > 0 and x is not None:
+        size = sys.getsizeof(x)
+    print('\t' * level,
+          f'type = {type(x)}, size = {sys.getsizeof(x)}, object = {x}')
+    if hasattr(x, '__iter__'):
+        if hasattr(x, 'items'):
+            for key, value in x.items:
+                size += show_size(key, level + 1)
+                size += show_size(value, level + 1)
+        elif not isinstance(x, str):
+            for item in x:
+                size += show_size(item, level + 1)
+    return size
 
 
 # =====================
 # Первоначальный вариант с 2мя вложенными циклами
 def func_classic(n=99):
-    result = [0] * 8
-    for n in range(2, n+1):
-        for i in range(2, 10):
-            if n % i == 0:
-                result[i-2] += 1
-    return result
+    variables_list[0] = [0] * 8
+    for variables_list[1] in range(2, n+1):
+        for variables_list[2] in range(2, 10):
+            if variables_list[1] % variables_list[2] == 0:
+                variables_list[0][variables_list[2]-2] += 1
+    return variables_list[0]
 
 # test_func(func_classic)
-
-# Я не захотел менять имя файла, поэтому вызывать timeit пришлось командой:
-# python -m timeit -n 1 -s "tsk=__import__('Task 1')" "tsk.func_classic(10)"
-# timeit:
-# n = 10        100 loops, best of 3: 6.84 usec per loop
-# n = 100       100 loops, best of 3: 72 usec per loop
-# n = 1000      100 loops, best of 3: 739 usec per loop
-# n = 10000     100 loops, best of 3: 7.57 msec per loop
-# n = 100000    100 loops, best of 3: 76 msec per loop
-# Вывод - похоже, что сложность алгоритма О(n)
-
-# cProfile.run('func_classic(100000)')
-# Нет рекурсии => не очень интересно
-#   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-#        1    0.000    0.000    0.083    0.083 <string>:1(<module>)
-#        1    0.083    0.083    0.083    0.083 Task 1.py:22(func_classic)
-#        1    0.000    0.000    0.083    0.083 {built-in method builtins.exec}
-#        1    0.000    0.000    0.000    0.000 {method 'disable' of
-#                                               '_lsprof.Profiler' objects}
+# Создаётся массив на 8 объектов типа int, а так же 2 счётчика циклов,
+# тоже типа int, что в сумме дало 408 байт.
 
 
 # =====================
 # Модифицированный вариант, где внутренний цикл раскрыт
 def func_onecycle(n=99):
-    result = [0] * 8
-    for n in range(2, n+1):
-        if n % 2 == 0:
-            result[0] += 1
-        if n % 3 == 0:
-            result[1] += 1
-        if n % 4 == 0:
-            result[2] += 1
-        if n % 5 == 0:
-            result[3] += 1
-        if n % 6 == 0:
-            result[4] += 1
-        if n % 7 == 0:
-            result[5] += 1
-        if n % 8 == 0:
-            result[6] += 1
-        if n % 9 == 0:
-            result[7] += 1
-    return result
+    variables_list[0] = [0] * 8
+    for variables_list[1] in range(2, n+1):
+        if variables_list[1] % 2 == 0:
+            variables_list[0][0] += 1
+        if variables_list[1] % 3 == 0:
+            variables_list[0][1] += 1
+        if variables_list[1] % 4 == 0:
+            variables_list[0][2] += 1
+        if variables_list[1] % 5 == 0:
+            variables_list[0][3] += 1
+        if variables_list[1] % 6 == 0:
+            variables_list[0][4] += 1
+        if variables_list[1] % 7 == 0:
+            variables_list[0][5] += 1
+        if variables_list[1] % 8 == 0:
+            variables_list[0][6] += 1
+        if variables_list[1] % 9 == 0:
+            variables_list[0][7] += 1
+    return variables_list[0]
 
 # test_func(func_onecycle)
-
-# timeit:
-# n = 10        100 loops, best of 3: 4.25 usec per loop
-# n = 100       100 loops, best of 3: 38.3 usec per loop
-# n = 1000      100 loops, best of 3: 423 usec per loop
-# n = 10000     100 loops, best of 3: 4.45 msec per loop
-# n = 100000    100 loops, best of 3: 45.4 msec per loop
-# Вывод: сложность алгоритма так же O(n), но меньше накладных расходов
-# на создание внутреннего цикла
-
-# cProfile.run('func_onecycle(100000)')
-# Нет рекурсии => не очень интересно
-#   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-#        1    0.000    0.000    0.047    0.047 <string>:1(<module>)
-#        1    0.047    0.047    0.047    0.047 Task 1.py:59(func_onecycle)
-#        1    0.000    0.000    0.047    0.047 {built-in method builtins.exec}
-#        1    0.000    0.000    0.000    0.000 {method 'disable' of
-#                                               '_lsprof.Profiler' objects}
+# Так же создаётся массив на 8 объектов типа int,но счётчик только один,
+# в сумме дало 380 байт.
 
 
 # =====================
@@ -111,102 +126,54 @@ def func_onecycle(n=99):
 def func_hentai(n=99):
     if n == 1:
         return [0] * 8
-    result = func_hentai(n-1)
-    for i in range(2, 10):
-        if n % i == 0:
-            result[i-2] += 1
-    return result
+    davaite_predstavim_chto_tyt_pusto_ya_ne_hochu_uchitivat_etu_peremennuyu = len(variables_list)
+    variables_list.append(func_hentai(n-1))
+    variables_list.append(None)
+    for variables_list[davaite_predstavim_chto_tyt_pusto_ya_ne_hochu_uchitivat_etu_peremennuyu+1] in range(2, 10):
+        if n % variables_list[davaite_predstavim_chto_tyt_pusto_ya_ne_hochu_uchitivat_etu_peremennuyu+1] == 0:
+            variables_list[davaite_predstavim_chto_tyt_pusto_ya_ne_hochu_uchitivat_etu_peremennuyu][variables_list[davaite_predstavim_chto_tyt_pusto_ya_ne_hochu_uchitivat_etu_peremennuyu+1]-2] += 1
+    return variables_list[davaite_predstavim_chto_tyt_pusto_ya_ne_hochu_uchitivat_etu_peremennuyu]
 
 # test_func(func_hentai)
-
-# Примечание: пришлось увеличить максимальную глубину рекурсии
-# Но вызвать для числа больше 3000 не удалось
-# Я увелчил глубину с помощью sys.setrecursionlimit(10000)
-# Но, видимо, у меня переполняется максимальный размер стека
-# Выделенного под Python
-# Я пытался увеличить его с помощью threading.stack_size
-# Но успехом это не увенчалось =(
-# timeit:
-# n = 10        100 loops, best of 3: 7.48 usec per loop
-# n = 100       100 loops, best of 3: 80.5 usec per loop
-# n = 1000      100 loops, best of 3: 949 usec per loop
-# n = 2000      100 loops, best of 3: 2.02 msec per loop
-# Вывод: и тут O(n), но накладные расходы ещё выше классического
-# и по памяти ограничения присутствуют
-
-# cProfile.run('func_hentai(1000)')
-#   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-#        1    0.000    0.000    0.002    0.002 <string>:1(<module>)
-#   1000/1    0.002    0.000    0.002    0.002 Task 1.py:106(func_hentai)
-#        1    0.000    0.000    0.002    0.002 {built-in method builtins.exec}
-#        1    0.000    0.000    0.000    0.000 {method 'disable' of
-#                                               '_lsprof.Profiler' objects}
-# Глубина рекурсии линейно зависит от переданного числа
+# ОООООООООчень много переменных, 34 тысячи байт!!! (34524).
+# Итого, я рекурсию люблю все меньше и меньше (до Вашего курса я её любил...)
 
 
 # =====================
 # Создадим алгоритм, похожий на классический, но с другим порядком циклов
 def func_notbest(n=99):
-    result = [0] * 8
-    for i in range(2, 10):
-        for num in range(2, n+1):
-            if num % i == 0:
-                result[i-2] += 1
-    return result
+    variables_list[0] = [0] * 8
+    for variables_list[1] in range(2, 10):
+        for variables_list[2] in range(2, n+1):
+            if variables_list[2] % variables_list[1] == 0:
+                variables_list[0][variables_list[1]-2] += 1
+    return variables_list[0]
 
 # test_func(func_notbest)
-
-# timeit:
-# n = 10        100 loops, best of 3: 6.27 usec per loop
-# n = 100       100 loops, best of 3: 45.7 usec per loop
-# n = 1000      100 loops, best of 3: 546 usec per loop
-# n = 10000     100 loops, best of 3: 5.54 msec per loop
-# n = 100000    100 loops, best of 3: 56.1 msec per loop
-# Вывод: алгоритм так же со сложностью O(n), только мы пробегаем
-# по большому массиву (2, n) восемь раз, что менее выгодно по сравнению
-# с классическим вариантом
-
-# cProfile.run('func_notbest(100000)')
-# Нет рекурсии => не очень интересно
-#   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-#        1    0.000    0.000    0.056    0.056 <string>:1(<module>)
-#        1    0.056    0.056    0.056    0.056 Task 1.py:144(func_notbest)
-#        1    0.000    0.000    0.056    0.056 {built-in method builtins.exec}
-#        1    0.000    0.000    0.000    0.000 {method 'disable' of
-#                                               '_lsprof.Profiler' objects}
+# То же самое, что и в первой функции - 408 байт.
 
 
 # =====================
 # Создадим плохой алгоритм, где сложность будет другой
 def func_hochu_kvadrat(n=99):
-    result = [0] * 8
-    for num1 in range(2, n+1):
-        for num2 in range(2, n+1):
+    variables_list[0] = [0] * 8
+    for variables_list[1] in range(2, n+1):
+        for variables_list[2] in range(2, n+1):
             for i in range(2, 10):
-                if num2 % i == 0:
-                    result[i-2] += 1
+                if variables_list[2] % i == 0:
+                    variables_list[0][i-2] += 1
         for i in range(2, 10):
-            if num1 % i == 0:
-                result[i-2] += 1
-    for i in range(len(result)):
-        result[i] = int(result[i] / n)
-    return result
+            if variables_list[1] % i == 0:
+                variables_list[0][i-2] += 1
+    for i in range(len(variables_list[0])):
+        variables_list[0][i] = int(variables_list[0][i] / n)
+    return variables_list[0]
 
 # test_func(func_hochu_kvadrat)
+# Не смотря на другую сложность алгоритма, счётчиков циклов используется
+# столько же, поэтому всё те же 408 байт.
 
-# timeit:
-# n = 10        100 loops, best of 3: 107 usec per loop
-# n = 100       100 loops, best of 3: 7.53 msec per loop
-# n = 1000      100 loops, best of 3: 770 msec per loop
-# n = 10000     1 loops, best of 3: 82.6 sec per loop
-# Вывод: неожиданно оказалось, что этот алгоритм не просто плох,
-# но и его сложность, судя по оценкам, O(n*n)
-
-cProfile.run('func_notbest(100000)')
-# Нет рекурсии => не очень интересно
-#   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-#        1    0.000    0.000    0.063    0.063 <string>:1(<module>)
-#        1    0.063    0.063    0.063    0.063 Task 1.py:143(func_notbest)
-#        1    0.000    0.000    0.063    0.063 {built-in method builtins.exec}
-#        1    0.000    0.000    0.000    0.000 {method 'disable' of
-#                                               '_lsprof.Profiler' objects}
+# На основании моей работы можно сделать вывод, что если Вы не используете
+# рекурсию, то у вас отличный с точки зрения памяти алгоритм.
+# P.S.: Вывод делаю чисто на основании выбранной задачи, лично я не настолько
+# категоричен - думаю, есть много способов оптимизации в том числе и рекурсии.
