@@ -15,7 +15,25 @@ print(f'Исходный массив:        {array}')
 
 
 def merge(array1, array2):
-    return array1 + array2
+    i = 0
+    j = 0
+    result = []
+    print(array1)
+    print(array2)
+    while True:
+        if i == len(array1):
+            result.append(array2[j:])
+            return result
+        if j == len(array2):
+            result.append(array1[i:])
+            return result
+
+        if array1[i] < array2[j]:
+            result.append(array1[i])
+            i += 1
+        else:
+            result.append(array2[j])
+            j += 1
 
 
 def merge_sort(array):
