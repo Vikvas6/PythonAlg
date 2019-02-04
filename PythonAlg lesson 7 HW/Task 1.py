@@ -5,13 +5,13 @@
 
 import random
 
-SIZE = 100
+SIZE = 10
 MIN_VAL = -100  # Включая
 MAX_VAL = 99  # Включая
 
 array = [random.randint(MIN_VAL, MAX_VAL) for _ in range(SIZE)]
 
-print(f'Исходный массив:        {array}')
+print(f"Исходный массив:        {array}")
 
 
 def puzyr_sort(array):
@@ -24,4 +24,4 @@ def puzyr_sort(array):
         n += 1
 
 puzyr_sort(array)
-print(f'Отсортированный массив: {array}')
+print(f"Отсортированный массив: {array}")

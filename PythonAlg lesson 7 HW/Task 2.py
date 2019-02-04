@@ -8,8 +8,7 @@ SIZE = 10
 MIN_VAL = 0  # Включая
 MAX_VAL = 50  # Исключая
 
-# array = [random.random()*(MAX_VAL - MIN_VAL)+MIN_VAL for _ in range(SIZE)]
-array = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+array = [random.random()*(MAX_VAL - MIN_VAL)+MIN_VAL for _ in range(SIZE)]
 
 print(f'Исходный массив:        {array}')
 
@@ -18,14 +17,12 @@ def merge(array1, array2):
     i = 0
     j = 0
     result = []
-    print(array1)
-    print(array2)
     while True:
         if i == len(array1):
-            result.append(array2[j:])
+            result += array2[j:]
             return result
         if j == len(array2):
-            result.append(array1[i:])
+            result += array1[i:]
             return result
 
         if array1[i] < array2[j]:
@@ -52,4 +49,4 @@ def merge_sort(array):
 
     return merge(merge_sort(s_ar), merge_sort(l_ar))
 
-print(merge_sort(array))
+print(f"Отсортированный массив: {merge_sort(array)}")
